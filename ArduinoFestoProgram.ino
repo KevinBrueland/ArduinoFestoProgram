@@ -9,29 +9,33 @@
 #include "CommonDefs.h"
 #include "RFIDDataContainer.h"
 #include "JarValidator.h"
+#include "FestoWeight.h"
 
 //constants
-const int baudRate = 9600;
-const byte mac[] = {0x90, 0xA2, 0xDA, 0x0E, 0xC0, 0x28};
-const byte apiServer[] = {52,178,208,12}; //api server address
+int baudRate = 9600;
+byte mac[] = {0x90, 0xA2, 0xDA, 0x0E, 0xC0, 0x28};
+byte apiServer[] = {52,178,208,12}; //api server address
 String apiHost = "festorest.azurewebsites.net";
 String itemTrackerResource = "/api/itemtrackers";
 bool isRFIDRead = false;
 
 //Pins - to be replaced with actual pin numbers
-byte pinRequestedToReadRFID = 2;
-byte pinReadingRFIDComplete = 3;
-byte pinRequestedToReadWeight = 5;
-byte pinReadingWeightComplete = 6;
-byte pinReportToRobotWeightOK = 7;
+byte pinRequestedToReadRFID = 17;
+byte pinReadingRFIDComplete = 14;
+byte pinRequestedToReadWeight = 13;
+byte pinReadingWeightComplete = 18;
+byte pinReportToRobotWeightOK = 16;
+byte pinReadWeight = A0;
+byte pinReadFromRFID = 0;
+byte pinWriteToRFID = 1;
 
 //Instantiating our objects
 IPAddress staticDeviceIp(192,168,1,136);
 EthernetClient client;
-HttpService *httpService;
+HttpService httpService(&Serial, &client, apiServer, apiHost);
 JarValidator jarValidator(&Serial);
 RFIDDataContainer tagDataContainer;
-
+FestoWeight festoWeight(&Serial, pinReadWeight);
 
 
 void ConfigurePins()
@@ -70,11 +74,8 @@ void AttemptToEstablishEthernetConnection()
 
 void setup() 
 {
-  httpService = new HttpService(&Serial, &client, apiServer, apiHost);
   ConfigurePins();  
-  AttemptToEstablishEthernetConnection();
-  String itemTrackerToPost = httpService->FormatItemTrackerPostData(7,20,FAILED);
-      httpService->Post(itemTrackerResource,itemTrackerToPost);    
+  AttemptToEstablishEthernetConnection();    
 }
 
 
