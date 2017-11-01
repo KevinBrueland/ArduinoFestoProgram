@@ -18,12 +18,15 @@ String apiHost = "festorest.azurewebsites.net";
 String itemTrackerResource = "/api/itemtrackers";
 bool isRFIDRead = false;
 
-//Pins - to be replaced with actual pin numbers
-byte pinRequestedToReadRFID = 2;
-byte pinReadingRFIDComplete = 3;
-byte pinRequestedToReadWeight = 5;
-byte pinReadingWeightComplete = 6;
-byte pinReportToRobotWeightOK = 7;
+//Pin allocation
+byte pinRequestedToReadRFID = 17;
+byte pinReadingRFIDComplete = 14;
+byte pinRequestedToReadWeight = 13;
+byte pinReadingWeightComplete = 18;
+byte pinReportToRobotWeightOK = 16;
+byte pinReadWeight = A0;
+byte pinReadFromRFID = 0;
+byte pinWriteToRFID = 1;
 
 //Instantiating our objects
 IPAddress staticDeviceIp(192,168,1,136);
@@ -31,7 +34,6 @@ EthernetClient client;
 HttpService *httpService;
 JarValidator jarValidator(&Serial);
 RFIDDataContainer tagDataContainer;
-
 
 
 void ConfigurePins()
@@ -52,7 +54,7 @@ void AttemptToEstablishEthernetConnection()
   Serial.println("Requesting IP from DHCP server...");
   if(Ethernet.begin(mac) == 0)
   {
-    Serial.println("Failed to connect to DHCP server");
+    Serial.println(F("Failed to connect to DHCP server"));
     Serial.println("Using provided static ip address:");
     Serial.println(staticDeviceIp);
     Ethernet.begin(mac, staticDeviceIp);
