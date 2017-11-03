@@ -1,10 +1,5 @@
-#include <ArduinoJson.h>
-#include <Dhcp.h>
-#include <Dns.h>
 #include <Ethernet.h>
 #include <EthernetClient.h>
-#include <EthernetServer.h>
-#include <EthernetUdp.h>
 #include "HttpService.h"
 #include "CommonDefs.h"
 #include "DataContainer.h"
@@ -27,8 +22,6 @@ byte pinRequestedToReadWeight = 13;
 byte pinReadingWeightComplete = 18;
 byte pinReportToRobotWeightOK = 16;
 byte pinReadWeight = A0;
-byte pinReadFromRFID = 0;
-byte pinWriteToRFID = 1;
 
 //Instantiating our objects
 IPAddress staticDeviceIp(192,168,1,136);
@@ -56,6 +49,7 @@ void AttemptToEstablishEthernetConnection()
 {
   Serial.begin(baudRate);
   Serial.println("Requesting IP from DHCP server...");
+  
   if(Ethernet.begin(mac) == 0)
   {
     Serial.println("Failed to connect to DHCP server");
@@ -69,8 +63,6 @@ void AttemptToEstablishEthernetConnection()
   Serial.println(Ethernet.localIP());
   Serial.println();
   Serial.println("Ethernet connection established");
-
-  //delay(1000);
 }
 
 
@@ -83,12 +75,12 @@ void setup()
 
 void loop() 
 {
-  if(RobotRequestingRFIDRead())
+  if(RobotAsksUsToReadRFID())
   {
     festoRFIDReader.ReadRFID(); 
     ReportToRobotRFIDReadingComplete();
   }
-  if(RobotRequestingWeightRead())
+  if(RobotAsksUsToReadWeight())
   {
     festoWeight.WeighJar();
     
@@ -107,9 +99,10 @@ void loop()
        
     }
   }
+
 }
 
-bool RobotRequestingRFIDRead()
+bool RobotAsksUsToReadRFID()
 {
   if(digitalRead(pinRequestedToReadRFID) == HIGH)
   {
@@ -131,7 +124,7 @@ void ReportToRobotRFIDReadingComplete()
   
 }
 
-bool RobotRequestingWeightRead()
+bool RobotAsksUsToReadWeight()
 {
   if(digitalRead(pinRequestedToReadWeight) == HIGH && isRFIDRead == true)
   {
@@ -159,13 +152,13 @@ void ReportToRobotWeightOK()
 
 void UpdateItemStatusToComplete()
 {
-  String itemTrackerToPost = httpService.FormatItemTrackerPostData(dataContainer.orderID,dataContainer.itemID,COMPLETE);
+  String itemTrackerToPost = httpService.FormatItemTrackerPostData(dataContainer.orderID,dataContainer.itemID,dataContainer.measuredWeight, COMPLETE);
   httpService.Post(itemTrackerResource,itemTrackerToPost);
 }
 
 void UpdateItemStatusToFailed()
 {
-  String itemTrackerToPost = httpService.FormatItemTrackerPostData(dataContainer.orderID,dataContainer.itemID,FAILED);
+  String itemTrackerToPost = httpService.FormatItemTrackerPostData(dataContainer.orderID,dataContainer.itemID, dataContainer.measuredWeight, FAILED);
   httpService.Post(itemTrackerResource,itemTrackerToPost); 
 }
   

@@ -62,28 +62,31 @@ bool HttpService::AttemptConnectionToServer()
   }
 }
 
-String HttpService::FormatItemTrackerPostData(int currentOrderID, int currentItemID, int itemStatus)
+String HttpService::FormatItemTrackerPostData(int currentOrderID, int currentItemID, float measuredWeight, int itemStatus)
 {
   char postData[250];
 
   if(itemStatus == COMPLETE)
   {
-    char leftString[] = "{\r\n  \"itemStatus\": 2,\r\n  \"itemID\":";
-    char sepString[] = ",\r\n  \"orderID\":";
-    char rightString[] = "\r\n}";
+    char startString[] = "{\r\n  \"itemStatus\": 2,\r\n  \"itemID\":";
+    char sep1String[] = ",\r\n  \"orderID\":";
+    char sep2String[] = ",\r\n  \"measuredWeight\":";
+    char endString[] = "\r\n}";
 
-    sprintf(postData,"%s %i%s %i %s",leftString,currentItemID,sepString,currentOrderID,rightString);
+    sprintf(postData,"%s %i%s %i%f %s",startString, currentItemID, sep1String, currentOrderID, sep2String, measuredWeight, endString);
+    
 
     String FormattedPostData(postData);
     return FormattedPostData;
   }
   else if(itemStatus == FAILED)
   {
-    char leftString[] = "{\r\n  \"itemStatus\": 3,\r\n  \"itemID\":";
-    char sepString[] = ",\r\n  \"orderID\":";
-    char rightString[] = "\r\n}";
+    char startString[] = "{\r\n  \"itemStatus\": 3,\r\n  \"itemID\":";
+    char sep1String[] = ",\r\n  \"orderID\":";
+    char sep2String[] = ",\r\n  \"measuredWeight\":";
+    char endString[] = "\r\n}";
 
-    sprintf(postData,"%s %i%s %i %s",leftString,currentItemID,sepString,currentOrderID,rightString);
+    sprintf(postData,"%s %i%s %i%f %s",startString, currentItemID, sep1String ,currentOrderID, sep2String, measuredWeight, endString);
 
     String FormattedPostData(postData);
     return FormattedPostData;

@@ -13,8 +13,8 @@ class HttpService
     void Get(String resource);
     void Post(String resource, String dataToPost);
     bool AttemptConnectionToServer();
-    String FormatItemTrackerPostData(int orderId, int itemId, int itemStatus);
-    void ShowDataInMonitor();     
+    String FormatItemTrackerPostData(int orderId, int itemId, float measuredWeight, int itemStatus);
+    void ShowDataInMonitor();    
     
     
     
