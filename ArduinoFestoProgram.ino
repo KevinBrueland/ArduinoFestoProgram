@@ -7,9 +7,10 @@
 #include <EthernetUdp.h>
 #include "HttpService.h"
 #include "CommonDefs.h"
-#include "RFIDDataContainer.h"
+#include "DataContainer.h"
 #include "JarValidator.h"
 #include "FestoWeight.h"
+#include "FestoRFIDReader.h"
 
 //constants
 int baudRate = 9600;
@@ -32,10 +33,11 @@ byte pinWriteToRFID = 1;
 //Instantiating our objects
 IPAddress staticDeviceIp(192,168,1,136);
 EthernetClient client;
+DataContainer dataContainer;
 HttpService httpService(&Serial, &client, apiServer, apiHost);
-JarValidator jarValidator(&Serial);
-RFIDDataContainer tagDataContainer;
-FestoWeight festoWeight(&Serial, pinReadWeight);
+JarValidator jarValidator(&Serial, &dataContainer);
+FestoWeight festoWeight(&Serial, pinReadWeight, &dataContainer);
+FestoRFIDReader festoRFIDReader(&Serial1, &Serial, &dataContainer);
 
 
 void ConfigurePins()
@@ -81,34 +83,30 @@ void setup()
 
 void loop() 
 {
-//  if(RobotRequestingRFIDRead())
-//  {
-//    digitalWrite(pinReadingRFIDComplete, HIGH);
-//    ReadValuesFromRFID(tagDataContainer); 
-//         
-//    ReportToRobotRFIDReadingComplete();
-//  }
-//  if(RobotRequestingWeightRead())
-//  {
-//    jarValidator.WeighJar();
-//    
-//    bool isWeightOK = jarValidator.CompareJarWeightWithOrderWeight(); 
-//    if(isWeightOK)
-//    {
-//      ReportToRobotWeightReadingComplete();
-//      ReportToRobotWeightOK();  
-//        
-//      String itemTrackerToPost = httpService->FormatItemTrackerPostData(tagDataContainer.orderID,tagDataContainer.itemID,COMPLETE);
-//      httpService->Post(itemTrackerResource,itemTrackerToPost);   
-//    }
-//    else
-//    {
-//      ReportToRobotWeightReadingComplete();
-//      
-//      String itemTrackerToPost = httpService->FormatItemTrackerPostData(tagDataContainer.orderID,tagDataContainer.itemID,FAILED);
-//      httpService->Post(itemTrackerResource,itemTrackerToPost);  
-//    }
-//  }
+  if(RobotRequestingRFIDRead())
+  {
+    festoRFIDReader.ReadRFID(); 
+    ReportToRobotRFIDReadingComplete();
+  }
+  if(RobotRequestingWeightRead())
+  {
+    festoWeight.WeighJar();
+    
+    bool isWeightOK = jarValidator.CompareJarWeightWithOrderWeight(); 
+    if(isWeightOK)
+    {
+      ReportToRobotWeightReadingComplete();
+      ReportToRobotWeightOK();  
+      UpdateItemStatusToComplete(); 
+         
+    }
+    else
+    {
+      ReportToRobotWeightReadingComplete();
+      UpdateItemStatusToFailed();
+       
+    }
+  }
 }
 
 bool RobotRequestingRFIDRead()
@@ -159,27 +157,16 @@ void ReportToRobotWeightOK()
    digitalWrite(pinReportToRobotWeightOK, HIGH);
 }
 
-void ReadValuesFromRFID(RFIDDataContainer& tagValues)
+void UpdateItemStatusToComplete()
 {
-  Serial.println("Reading values from RFID tag...");
-  
-  tagValues.orderID = 7;
-  tagValues.itemID = 20;
-  tagValues.tearWeight = 20.00;
-  tagValues.orderWeight = 25.00;
-  jarValidator.SetTearWeight(tagDataContainer.tearWeight);
-  jarValidator.SetOrderWeight(tagDataContainer.orderWeight);
-  delay(200);
-//    Serial.print("orderID: ");
-//    Serial.println(tagDataContainer.orderID);
-//    Serial.print("itemID: ");
-//    Serial.println(tagDataContainer.itemID);
-//    Serial.print("tearWeight: ");
-//    Serial.println(tagDataContainer.tearWeight);
-//    Serial.print("orderWeight: ");
-//    Serial.println(tagDataContainer.orderWeight);
-  Serial.println("RFID Reading complete. Letting robot know");
-  
+  String itemTrackerToPost = httpService.FormatItemTrackerPostData(dataContainer.orderID,dataContainer.itemID,COMPLETE);
+  httpService.Post(itemTrackerResource,itemTrackerToPost);
+}
+
+void UpdateItemStatusToFailed()
+{
+  String itemTrackerToPost = httpService.FormatItemTrackerPostData(dataContainer.orderID,dataContainer.itemID,FAILED);
+  httpService.Post(itemTrackerResource,itemTrackerToPost); 
 }
   
 

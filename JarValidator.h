@@ -1,40 +1,22 @@
 #ifndef FestoJarValidator_h;
 #define FestoJarValidator_h;
 #include "Arduino.h";
-#include "RFIDDataContainer.h"
+#include "DataContainer.h"
 
 
 class JarValidator
 {
   
   public:
-    JarValidator(Stream *serial);
-    bool CompareJarWeightWithOrderWeight();
-    
-    void WeighJar();   
-    float ConvertSignalToWeight(float signalValue);
-    
-    void SetJarWeight(float jarWeight);
-    void SetTearWeight(float tearWeight);
-    void SetOrderWeight(float orderWeight); 
-    
+    JarValidator(Stream *serial, DataContainer *dataContainer);
+    bool CompareJarWeightWithOrderWeight();  
     
   private:
    Stream *_serial;
+   DataContainer *_dataContainer;  
    
-   float _jarWeight;
-   float _allowedDeviaton;   
-   float _tearWeight;
-   float _orderWeight;
-   
-   const float _weightScalingFactor = 0.0372;
-   const float _allowedConfidenceInterval = 0.05;
-   
-   float CalculateAllowedDeviaton();
-  
- 
-  
-  
+   float _allowedDeviation;;
+   float _tearWeight; 
   
 };
 

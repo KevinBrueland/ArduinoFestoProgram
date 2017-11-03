@@ -1,53 +1,37 @@
 #include "Arduino.h"
 #include "JarValidator.h"
+#include "dataContainer.h"
 
 
-JarValidator::JarValidator(Stream *serial)
+JarValidator::JarValidator(Stream *serial, DataContainer *dataContainer)
 {
   _serial = serial;
+  dataContainer = _dataContainer;
 }
 
-void JarValidator::WeighJar()
-{
-  //get some value from the weight, here just a dummy variable atm
-  float signalValue = 1374;
-  _jarWeight = ConvertSignalToWeight(signalValue);
-  _serial->println("Jar weight: " + (String)_jarWeight);
-}
-
-float JarValidator::ConvertSignalToWeight(float signalValue)
-{
-  float weight = signalValue * _weightScalingFactor;
-
-  return weight;
-}
-
-void JarValidator::SetJarWeight(float jarWeight)
-{
-  _jarWeight = jarWeight;
-}
-
-void JarValidator::SetOrderWeight(float orderWeight)
-{
-  _orderWeight = orderWeight;
-}
-
-void JarValidator::SetTearWeight(float tearWeight)
-{
-  _tearWeight = tearWeight;
-}
 
 bool JarValidator::CompareJarWeightWithOrderWeight()
 {
-  _serial->println("Comparing product weight in current jar with order weight");
-  float productWeight = _jarWeight - _tearWeight;
-  _serial->println("product weight: " + (String)productWeight);
-  float deviation = abs(_orderWeight - productWeight);
-  _serial->println("Devation of current jar weight: " + (String)deviation + " grams");
+  if(_dataContainer->jarSize == "Small")
+  {
+    _tearWeight = 1; //replace with actual value
+    _allowedDeviation = 1.0; //replace with actual value
+  }
+  else if(_dataContainer->jarSize == "Large")
+  {
+    _tearWeight = 2; //replace with actual value;
+    _allowedDeviation = 2.0; //replace with actual value
+  }
   
-  float allowedDeviation = CalculateAllowedDeviaton();
-  _serial->println("Checking: " + (String)deviation + " < " + (String)allowedDeviation);
-  if(deviation < allowedDeviation)
+  _serial->println("Comparing product weight in current jar with order weight");
+  float productWeight = _dataContainer->measuredWeight - _tearWeight;
+  _serial->println("product weight: " + (String)productWeight);
+  
+  float deviation = abs(_dataContainer->orderWeight - productWeight);
+  _serial->println("Devation of current jar: " + (String)deviation + " grams");
+  
+  _serial->println("Checking: " + (String)deviation + " < " + (String)_allowedDeviation);
+  if(deviation < _allowedDeviation)
   {
     _serial->println("Deviation within acceptable bounds. Jar accepted");
     return true;    
@@ -59,12 +43,4 @@ bool JarValidator::CompareJarWeightWithOrderWeight()
   }
 }
 
-float JarValidator::CalculateAllowedDeviaton()
-{  
-  float allowedDeviaton = _orderWeight*_allowedConfidenceInterval;
-  _serial->println("Allowed deviaton: " + (String)allowedDeviaton + " grams");
-  
-  return abs(allowedDeviaton);
- 
-}
 

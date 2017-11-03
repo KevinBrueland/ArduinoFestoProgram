@@ -8,11 +8,12 @@
 #ifndef FestoWeight_h
 #define FestoWeight_h
 #include "Arduino.h"
+#include "DataContainer.h"
 
 class FestoWeight
 {
   public:
-    FestoWeight(Stream *serial, byte analogReadPin);
+    FestoWeight(Stream *serial, byte analogReadPin, DataContainer *dataContainer);
     float WeighJar();
     
     
@@ -24,7 +25,7 @@ class FestoWeight
     double ConvertSignalToMiliVolts(double signalValue);
     double ConvertMiliVoltsToGrams(double miliVoltValue);
     FilterOnePole _lowpassFilter;
-    
+    DataContainer *_dataContainer;
 
     byte _analogReadPin;
     int _adcResolution = 1023;

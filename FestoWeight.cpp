@@ -7,8 +7,9 @@
 
 #include "Arduino.h"
 #include "FestoWeight.h"
+#include "DataContainer.h"
 
-FestoWeight::FestoWeight(Stream *serial, byte analogReadPin)
+FestoWeight::FestoWeight(Stream *serial, byte analogReadPin, DataContainer *dataContainer)
 {
   _serial = serial;
   _analogReadPin = analogReadPin;
@@ -41,7 +42,8 @@ float FestoWeight::WeighJar()
   _serial->print("Weight: ");
   _serial->print(weightInGrams);
   _serial->println(" grams");
-  
+
+  _dataContainer->measuredWeight = weightInGrams;
   return weightInGrams;
 }
 
