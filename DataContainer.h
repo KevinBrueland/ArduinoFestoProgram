@@ -5,7 +5,7 @@ struct DataContainer
 { 
   int orderID;
   int itemID;
-  String jarSize;
+  int jarSize;
   float orderWeight;
   float measuredWeight;
 };

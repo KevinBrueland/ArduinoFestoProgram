@@ -27,10 +27,11 @@ byte pinReadWeight = A0;
 IPAddress staticDeviceIp(192,168,1,136);
 EthernetClient client;
 DataContainer dataContainer;
+FestoRFIDReader festoRFIDReader(&Serial1, &Serial, &dataContainer);
 HttpService httpService(&Serial, &client, apiServer, apiHost);
 JarValidator jarValidator(&Serial, &dataContainer);
 FestoWeight festoWeight(&Serial, pinReadWeight, &dataContainer);
-FestoRFIDReader festoRFIDReader(&Serial1, &Serial, &dataContainer);
+
 
 
 void ConfigurePins()
@@ -45,9 +46,14 @@ void ConfigurePins()
   pinMode(pinReportToRobotWeightOK, OUTPUT);
 }
 
+void StartSerials()
+{
+  Serial.begin(9600);
+  Serial1.begin(38400);
+}
+
 void AttemptToEstablishEthernetConnection()
 {
-  Serial.begin(baudRate);
   Serial.println("Requesting IP from DHCP server...");
   
   if(Ethernet.begin(mac) == 0)
@@ -64,41 +70,55 @@ void AttemptToEstablishEthernetConnection()
   Serial.println();
   Serial.println("Ethernet connection established");
 }
+char cmd[] = {'S', 'R', '1', '0', '0', '0', '5', '0', '1', '#', '\r'};
 
-
+String data;
 void setup() 
 {
-  ConfigurePins();  
-  AttemptToEstablishEthernetConnection();    
+  StartSerials();
+  //Serial.begin(9600);
+  //Serial.println("starting rfid serial");
+  //ConfigurePins();  
+  //AttemptToEstablishEthernetConnection();
+  festoRFIDReader.ReadRFID();;
+  //Serial1.print(cmd);
+  //delay(1000);
+//  while(Serial1.available())
+//    {
+//      delay(1);
+//      char c = Serial1.read();
+//      data += c;
+//    }
+//  Serial.println(data);
 }
 
 
 void loop() 
 {
-  if(RobotAsksUsToReadRFID())
-  {
-    festoRFIDReader.ReadRFID(); 
-    ReportToRobotRFIDReadingComplete();
-  }
-  if(RobotAsksUsToReadWeight())
-  {
-    festoWeight.WeighJar();
-    
-    bool isWeightOK = jarValidator.CompareJarWeightWithOrderWeight(); 
-    if(isWeightOK)
-    {
-      ReportToRobotWeightReadingComplete();
-      ReportToRobotWeightOK();  
-      UpdateItemStatusToComplete(); 
-         
-    }
-    else
-    {
-      ReportToRobotWeightReadingComplete();
-      UpdateItemStatusToFailed();
-       
-    }
-  }
+//  if(RobotAsksUsToReadRFID())
+//  {
+//    festoRFIDReader.ReadRFID(); 
+//    ReportToRobotRFIDReadingComplete();
+//  }
+//  if(RobotAsksUsToReadWeight())
+//  {
+//    festoWeight.WeighJar();
+//    
+//    bool isWeightOK = jarValidator.CompareJarWeightWithOrderWeight(); 
+//    if(isWeightOK)
+//    {
+//      ReportToRobotWeightReadingComplete();
+//      ReportToRobotWeightOK();  
+//      UpdateItemStatusToComplete(); 
+//         
+//    }
+//    else
+//    {
+//      ReportToRobotWeightReadingComplete();
+//      UpdateItemStatusToFailed();
+//       
+//    }
+//  }
 
 }
 
