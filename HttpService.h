@@ -11,14 +11,14 @@ class HttpService
   public:
     HttpService(Stream *serial, EthernetClient *client, byte* apiServer, String apiHost);
     void Get(String resource);
-    void Post(String resource, String dataToPost);
-    bool AttemptConnectionToServer();
+    void Post(String resource, String dataToPost); 
     String FormatItemTrackerPostData(int orderId, int itemId, float measuredWeight, int itemStatus);
     void ShowDataInMonitor();    
     
     
     
   private:
+  bool AttemptConnectionToServer();
   
   String _apiHost;
   byte* _apiServer;

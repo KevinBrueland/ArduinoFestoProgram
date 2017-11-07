@@ -1,7 +1,6 @@
 #include "FestoRFIDReader.h"
 #include "Arduino.h"
 #include "DataContainer.h"
-#include "HardwareSerial.h"
 
 FestoRFIDReader::FestoRFIDReader(Stream *rs232Serial, Stream *serial, DataContainer *dataContainer)
 { 

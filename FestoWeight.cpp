@@ -33,11 +33,12 @@ void FestoWeight::SetAnalogReferenceToDefault()
 
 float FestoWeight::WeighJar()
 {
-  delay(200);
   float signalValue = ReadSignalValue();
-
+   _serial->print("signal: ");
+  _serial->print(signalValue);
   float miliVoltValue = ConvertSignalToMiliVolts(signalValue);
-
+  _serial->print("voltage: ");
+  _serial->print(miliVoltValue);
   float weightInGrams = ConvertMiliVoltsToGrams(miliVoltValue);
   _serial->print("Weight: ");
   _serial->print(weightInGrams);

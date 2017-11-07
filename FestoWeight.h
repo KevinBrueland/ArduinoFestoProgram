@@ -28,7 +28,7 @@ class FestoWeight
     DataContainer *_dataContainer;
 
     byte _analogReadPin;
-    int _adcResolution = 1023;
+    int _adcResolution = 1024;
     int _refVoltage;
     float _weightScalingConstant = 0.003723; //to be calcualted
     int _measurementsToAverage = 1000;

@@ -1,7 +1,7 @@
 #include <Ethernet.h>
 #include <EthernetClient.h>
 #include "HttpService.h"
-#include "CommonDefs.h"
+#include "ItemStatusDefs.h"
 #include "DataContainer.h"
 #include "JarValidator.h"
 #include "FestoWeight.h"
@@ -16,22 +16,26 @@ String itemTrackerResource = "/api/itemtrackers";
 bool isRFIDRead = false;
 
 //Pins - to be replaced with actual pin numbers
+//Pin allocation
 byte pinRequestedToReadRFID = 17;
 byte pinReadingRFIDComplete = 14;
-byte pinRequestedToReadWeight = 13;
-byte pinReadingWeightComplete = 18;
+byte pinRequestedToReadWeight = 15;
+byte pinReadingWeightComplete = 22;
 byte pinReportToRobotWeightOK = 16;
 byte pinReadWeight = A0;
 
+
 //Instantiating our objects
-IPAddress staticDeviceIp(192,168,1,136);
+IPAddress staticDeviceIp(192,168,0,40);
+IPAddress domainNameServer(192,168,12,1);
+IPAddress gateway(192,168,0,2);
+IPAddress subMask(255,255,255,0);
 EthernetClient client;
 DataContainer dataContainer;
 FestoRFIDReader festoRFIDReader(&Serial1, &Serial, &dataContainer);
 HttpService httpService(&Serial, &client, apiServer, apiHost);
 JarValidator jarValidator(&Serial, &dataContainer);
 FestoWeight festoWeight(&Serial, pinReadWeight, &dataContainer);
-
 
 
 void ConfigurePins()
@@ -55,67 +59,60 @@ void StartSerials()
 void AttemptToEstablishEthernetConnection()
 {
   Serial.println("Requesting IP from DHCP server...");
-  
-  if(Ethernet.begin(mac) == 0)
+  int connection = Ethernet.begin(mac);
+  Serial.print("connection: ");
+  Serial.println(connection);
+  if(connection == 1)
+  {
+    Serial.println("IP provided by DHCP"); 
+    Serial.println("Device IP: ");
+    Serial.println(Ethernet.localIP());
+    Serial.println();
+    Serial.println("Ethernet connection established");
+  }
+  else if(connection == 0)
   {
     Serial.println("Failed to connect to DHCP server");
     Serial.println("Using provided static ip address:");
     Serial.println(staticDeviceIp);
-    Ethernet.begin(mac, staticDeviceIp);
+    Ethernet.begin(mac, staticDeviceIp, domainNameServer, gateway, subMask);
+    Serial.println("Ethernet connection established");
   }
-  
-  Serial.println("IP provided by DHCP"); 
-  Serial.println("Device IP: ");
-  Serial.println(Ethernet.localIP());
-  Serial.println();
-  Serial.println("Ethernet connection established");
+    
 }
-char cmd[] = {'S', 'R', '1', '0', '0', '0', '5', '0', '1', '#', '\r'};
 
-String data;
 void setup() 
 {
   StartSerials();
-  //Serial.begin(9600);
-  //Serial.println("starting rfid serial");
-  //ConfigurePins();  
-  //AttemptToEstablishEthernetConnection();
-  festoRFIDReader.ReadRFID();;
-  //Serial1.print(cmd);
-  //delay(1000);
-//  while(Serial1.available())
-//    {
-//      delay(1);
-//      char c = Serial1.read();
-//      data += c;
-//    }
-//  Serial.println(data);
+  ConfigurePins();
+  AttemptToEstablishEthernetConnection();
+  
 }
-
-
 void loop() 
-{
-//  if(RobotAsksUsToReadRFID())
+{ 
+//if(RobotAsksUsToReadRFID())
 //  {
 //    festoRFIDReader.ReadRFID(); 
 //    ReportToRobotRFIDReadingComplete();
 //  }
+//  
 //  if(RobotAsksUsToReadWeight())
 //  {
 //    festoWeight.WeighJar();
 //    
-//    bool isWeightOK = jarValidator.CompareJarWeightWithOrderWeight(); 
+//    bool isWeightOK = true;//jarValidator.CompareJarWeightWithOrderWeight(); 
 //    if(isWeightOK)
 //    {
 //      ReportToRobotWeightReadingComplete();
 //      ReportToRobotWeightOK();  
-//      UpdateItemStatusToComplete(); 
-//         
+//      //UpdateItemStatusToComplete(); 
+//      Serial.print("Updating item to COMPLETE in DB");   
 //    }
 //    else
 //    {
 //      ReportToRobotWeightReadingComplete();
-//      UpdateItemStatusToFailed();
+//      //UpdateItemStatusToFailed();
+//       Serial.print("Updating item to FAILED in DB"); 
 //       
 //    }
 //  }
@@ -124,11 +121,10 @@ void loop()
 
 bool RobotAsksUsToReadRFID()
 {
-  if(digitalRead(pinRequestedToReadRFID) == HIGH)
+  if(digitalRead(pinRequestedToReadRFID) == LOW)
   {
     Serial.println("Robot requesting us to read RFID");
     isRFIDRead = true;
-    digitalWrite(pinRequestedToReadRFID, LOW);
     return true;
   }
   else
@@ -146,10 +142,9 @@ void ReportToRobotRFIDReadingComplete()
 
 bool RobotAsksUsToReadWeight()
 {
-  if(digitalRead(pinRequestedToReadWeight) == HIGH && isRFIDRead == true)
+  if(digitalRead(pinRequestedToReadWeight) == LOW && isRFIDRead == true)
   {
     Serial.println("Robot requesting us to read weight");
-    digitalWrite(pinRequestedToReadWeight, LOW);
     isRFIDRead = false;
     return true;
   }

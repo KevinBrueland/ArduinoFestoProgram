@@ -15,8 +15,8 @@ class JarValidator
    Stream *_serial;
    DataContainer *_dataContainer;  
    
-   float _allowedDeviation;;
-   float _tearWeight; 
+   float _allowedDeviation;
+   float _tearWeight;
   
 };
 

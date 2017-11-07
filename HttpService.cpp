@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "HttpService.h"
-#include "CommonDefs.h"
+#include "ItemStatusDefs.h"
 
 HttpService::HttpService(Stream *serial, EthernetClient *client, byte* apiServer, String apiHost)
 {
@@ -14,13 +14,13 @@ void HttpService::Get(String resource)
   if(AttemptConnectionToServer() == true)
   {
     _serial->println("Connection to " + _apiHost + " establised");
-    _serial->println("GET " + resource + " HTTP/1.1");
-    _serial->println("Host: " + _apiHost);
+    _serial->println();
     _client->println("GET " + resource + " HTTP/1.1");    
     _client->println("Host: " + _apiHost);       
     _client->println("Connection: close"); 
     _client->println("Content-Type: application/json; charset=UTF-8");
-    _client->println(); 
+    _client->println();
+    _client->flush();
   }
   else
   {
@@ -42,6 +42,7 @@ void HttpService::Post(String resource, String dataToPost)
     _client->println(dataToPost.length());
     _client->println();
     _client->println(dataToPost);  
+    _client->flush();
   }
   else
   {
@@ -64,7 +65,7 @@ bool HttpService::AttemptConnectionToServer()
 
 String HttpService::FormatItemTrackerPostData(int currentOrderID, int currentItemID, float measuredWeight, int itemStatus)
 {
-  char postData[250];
+  char postData[500];
 
   if(itemStatus == COMPLETE)
   {
@@ -73,10 +74,11 @@ String HttpService::FormatItemTrackerPostData(int currentOrderID, int currentIte
     char sep2String[] = ",\r\n  \"measuredWeight\":";
     char endString[] = "\r\n}";
 
-    sprintf(postData,"%s %i%s %i%f %s",startString, currentItemID, sep1String, currentOrderID, sep2String, measuredWeight, endString);
+    sprintf(postData,"%s %i%s %i%s %s%s",startString, currentItemID, sep1String, currentOrderID, sep2String, String(measuredWeight).c_str(), endString);
     
 
     String FormattedPostData(postData);
+
     return FormattedPostData;
   }
   else if(itemStatus == FAILED)
@@ -86,7 +88,7 @@ String HttpService::FormatItemTrackerPostData(int currentOrderID, int currentIte
     char sep2String[] = ",\r\n  \"measuredWeight\":";
     char endString[] = "\r\n}";
 
-    sprintf(postData,"%s %i%s %i%f %s",startString, currentItemID, sep1String ,currentOrderID, sep2String, measuredWeight, endString);
+    sprintf(postData,"%s %i%s %i%s %s%s",startString, currentItemID, sep1String ,currentOrderID, sep2String, String(measuredWeight).c_str(), endString);
 
     String FormattedPostData(postData);
     return FormattedPostData;
