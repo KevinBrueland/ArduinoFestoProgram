@@ -33,12 +33,13 @@ void FestoWeight::SetAnalogReferenceToDefault()
 
 float FestoWeight::WeighJar()
 {
+  //_serial->print(_refVoltage);
   float signalValue = ReadSignalValue();
-   _serial->print("signal: ");
-  _serial->print(signalValue);
+//   _serial->print("signal: ");
+//  _serial->print(signalValue);
   float miliVoltValue = ConvertSignalToMiliVolts(signalValue);
-  _serial->print("voltage: ");
-  _serial->print(miliVoltValue);
+//  _serial->print("miliVolts: ");
+//  _serial->println(miliVoltValue);
   float weightInGrams = ConvertMiliVoltsToGrams(miliVoltValue);
   _serial->print("Weight: ");
   _serial->print(weightInGrams);
@@ -67,7 +68,7 @@ double FestoWeight::ReadSignalValue()
 
 double FestoWeight::ConvertSignalToMiliVolts(double signalValue)
 {
-  double miliVoltValue =  (signalValue/_adcResolution) * _refVoltage;
+  double miliVoltValue =  signalValue*(_refVoltage/_adcResolution);
   
 //  _serial->print("miliVolt Value: ");
 //  _serial->println(miliVoltValue);
@@ -77,7 +78,7 @@ double FestoWeight::ConvertSignalToMiliVolts(double signalValue)
 
 double FestoWeight::ConvertMiliVoltsToGrams(double miliVoltValue)
 {
-  double weightInGrams =  (miliVoltValue * 0.03556841718) - 1.18087145;
+  double weightInGrams =  (miliVoltValue * 0.045015) + 0.092158;
 //  _serial->print("weight: ");
 //  _serial->print(weightInGrams);  Commented out until the weightScalingConstant has been calculated
 //  _serial->println(" grams");

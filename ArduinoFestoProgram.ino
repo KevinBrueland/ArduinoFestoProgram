@@ -7,6 +7,7 @@
 #include "FestoWeight.h"
 #include "FestoRFIDReader.h"
 
+
 //constants
 int baudRate = 9600;
 byte mac[] = {0x90, 0xA2, 0xDA, 0x0E, 0xC0, 0x28};
@@ -36,7 +37,6 @@ FestoRFIDReader festoRFIDReader(&Serial1, &Serial, &dataContainer);
 HttpService httpService(&Serial, &client, apiServer, apiHost);
 JarValidator jarValidator(&Serial, &dataContainer);
 FestoWeight festoWeight(&Serial, pinReadWeight, &dataContainer);
-
 
 void ConfigurePins()
 {
@@ -85,37 +85,39 @@ void setup()
 {
   StartSerials();
   ConfigurePins();
-  AttemptToEstablishEthernetConnection();
+  //AttemptToEstablishEthernetConnection();
+  
   
 }
 void loop() 
 { 
-//if(RobotAsksUsToReadRFID())
-//  {
-//    festoRFIDReader.ReadRFID(); 
-//    ReportToRobotRFIDReadingComplete();
-//  }
-//  
-//  if(RobotAsksUsToReadWeight())
-//  {
-//    festoWeight.WeighJar();
-//    
-//    bool isWeightOK = true;//jarValidator.CompareJarWeightWithOrderWeight(); 
-//    if(isWeightOK)
-//    {
-//      ReportToRobotWeightReadingComplete();
-//      ReportToRobotWeightOK();  
-//      //UpdateItemStatusToComplete(); 
-//      Serial.print("Updating item to COMPLETE in DB");   
-//    }
-//    else
-//    {
-//      ReportToRobotWeightReadingComplete();
-//      //UpdateItemStatusToFailed();
-//       Serial.print("Updating item to FAILED in DB"); 
-//       
-//    }
-//  }
+  
+  if(RobotAsksUsToReadRFID())
+  {
+    festoRFIDReader.ReadRFID(); 
+    ReportToRobotRFIDReadingComplete();
+  }
+  
+  if(RobotAsksUsToReadWeight())
+  {
+    festoWeight.WeighJar();
+    
+    bool isWeightOK = true; //forcing order to be valid //jarValidator.CompareJarWeightWithOrderWeight(); 
+    if(isWeightOK)
+    {
+      ReportToRobotWeightReadingComplete();
+      ReportToRobotWeightOK();  
+      //UpdateItemStatusToComplete(); 
+      Serial.print("Updating item to COMPLETE in DB");   
+    }
+    else
+    {
+      ReportToRobotWeightReadingComplete();
+      //UpdateItemStatusToFailed();
+       Serial.print("Updating item to FAILED in DB"); 
+       
+    }
+  }
 
 }
 

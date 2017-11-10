@@ -16,7 +16,7 @@ class JarValidator
    DataContainer *_dataContainer;  
    
    float _allowedDeviation;
-   float _tearWeight;
+   float _tareWeight;
   
 };
 

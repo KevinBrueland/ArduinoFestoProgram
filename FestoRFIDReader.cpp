@@ -1,6 +1,7 @@
 #include "FestoRFIDReader.h"
 #include "Arduino.h"
 #include "DataContainer.h"
+#include "HexDecConverter.h"
 
 FestoRFIDReader::FestoRFIDReader(Stream *rs232Serial, Stream *serial, DataContainer *dataContainer)
 { 
@@ -11,138 +12,56 @@ FestoRFIDReader::FestoRFIDReader(Stream *rs232Serial, Stream *serial, DataContai
 
 bool FestoRFIDReader::ReadRFID()
 {
+  char data[8];
+  int index = 0;
+   SetDataCarrierType();
    _serial->println("Reading values from RFID");
+   char cmd[] = {'S', 'R', '1', '0', '0', '0', '0', '0', '2', '#', '\r', '\0'};
    
-   _dataContainer->orderID = ReadOrderId();
-   _serial->print("Order ID: ");
-   _serial->println(_dataContainer->orderID);
-   delay(50);
-   _dataContainer->itemID = ReadItemId();
-   _serial->print("Item ID: ");
-   _serial->println(_dataContainer->itemID);
-   delay(50);
-   _dataContainer->jarSize = ReadJarSize();
-   _serial->print("Jar Size: ");
-   _serial->println(_dataContainer->jarSize);
-   delay(50);
-   _dataContainer->orderWeight = ReadOrderWeight();
-   _serial->print("Order Weight: ");
-   _serial->println(_dataContainer->orderWeight);
+   _rs232Serial->print(cmd);
 
-   _serial->println("RFID Reading Complete");
+   delay(500);
    
-}
-
-void FestoRFIDReader::RequestValueFromRFID(char address)
-{
-    char cmd[] = {'S', 'R', '1', '0', '0', '0', address, '0', '1', '#', '\r', '\0'};
-
-    _rs232Serial->print(cmd);
-    //_serial->print(cmd);
-    delay(1000);
-}
-
-int FestoRFIDReader::ReadOrderId()
-{
-    String data;
-    RequestValueFromRFID(_orderIdTagAddress);
-    
-    while(_rs232Serial->available())
+   while(_rs232Serial->available())
     {
       delay(100);
       char c = _rs232Serial->read();
-      data += c;
-    }
-    //_serial->println(data);
-    
-    int ParsedData = ParseDataToInt(data);
-
-    return ParsedData;
-    
-
-}
-
-int FestoRFIDReader::ReadItemId()
-{
-   String data;
-   RequestValueFromRFID(_itemIdTagAddress);
-
-    while(_rs232Serial->available())
-    {
-      delay(1);
-      char c = _rs232Serial->read();
-      data += c;
+      data[index] = c;
+      index++;
     }
 
-    int ParsedData = ParseDataToInt(data);
-
-    return ParsedData;
+    _dataContainer->orderID = data[2];
+    _serial->print("Order ID: ");
+    _serial->println(_dataContainer->orderID, DEC);
+    delay(100);
+    _dataContainer->itemID = data[3];
+    _serial->print("Item ID: ");
+    _serial->println(_dataContainer->itemID, DEC);
+    delay(100);
+    _dataContainer->jarSize = data[4];
+    _serial->print("Jar Size: ");
+    _serial->println(_dataContainer->jarSize, DEC);
+    delay(100);
+    _dataContainer->orderWeight = data[5];
+    _serial->print("Order Weight: ");
+    _serial->println(_dataContainer->orderWeight, DEC);
+    delay(100);
+    _serial->println();
+    _serial->println("RFID Reading Complete");
 }
 
 
-int FestoRFIDReader::ReadJarSize()
+
+void FestoRFIDReader::SetDataCarrierType()
 {
-   String data;
-   RequestValueFromRFID(_itemSizeTagAddress); 
-
-   while(_rs232Serial->available())
-   {
-    delay(1);
-      char c = _rs232Serial->read();
-      data += c;
-   }
-
-    int ParsedData = ParseDataToInt(data);
-
-    return ParsedData;
-
+   char set[] = {'C', 'T', '1', '0', '3', '#', '\r', '\0'};
+   _rs232Serial->print(set); //setting the data carrier type to IPC03 
 }
 
-float FestoRFIDReader::ReadOrderWeight()
+void FestoRFIDReader::RequestData()
 {
-   String data;
-   RequestValueFromRFID(_orderWeightTagAddress);
-
-   while(_rs232Serial->available())
-   {
-      delay(1);
-      char c = _rs232Serial->read();
-      data += c;
-   }
-
-    float ParsedData = ParseDataToFloat(data);
-
-    return ParsedData;
-}
-
-int FestoRFIDReader::ParseDataToInt(String data)
-{
-  int endDelim = data.indexOf(_dataEndCharacter); // end character in rfid data received
-
-  String parsedData = data.substring(2, endDelim);
-
-  int parsedValue = parsedData.toInt();
-
-  return parsedValue;
-}
-
-String FestoRFIDReader::ParseDataToString(String data)
-{
-  int endDelim = data.indexOf(_dataEndCharacter);
-
-  String parsedData = data.substring(2, endDelim);
-
-  return parsedData;
-}
-
-float FestoRFIDReader::ParseDataToFloat(String data)
-{
-  int endDelim = data.indexOf(_dataEndCharacter);
-
-  String parsedData = data.substring(2, endDelim);
-
-  float parsedValue = parsedData.toFloat();
-
-  return parsedValue;
+  char cmd[] = {'S', 'R', '1', '0', '0', '0', '0' ,'0', '2', '#', '\r', '\0'};
+  _rs232Serial->print(cmd);
+  delay(500);
 }
 
